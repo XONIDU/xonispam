@@ -1,3 +1,5 @@
+#Somos XONINDU
+
 #Arch linux
 sudo pacman -S python-pip
 pip install pyautogui --break-system-packages
