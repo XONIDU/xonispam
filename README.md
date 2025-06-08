@@ -1,6 +1,6 @@
 # 📄 XONISPAM
 
-**Advertencia:** Este código tiene **únicamente fines educativos** y no debe usarse para ningún tipo de actividad malintencionada.
+**Advertencia:** Este código tiene **únicamente fines educativos** y no debe utilizarse para ningún tipo de actividad malintencionada.
 
 ---
 
