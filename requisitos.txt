@@ -11,3 +11,6 @@ pip3 install pyautogui --break-system-packages
 
 #Windows
 pip install pyautogui
+
+#Ejecucion:
+python start.py
