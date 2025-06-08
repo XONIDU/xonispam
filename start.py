@@ -1,3 +1,5 @@
+#Creditos: XONIDU
+
 from pyautogui import write, press
 from time import sleep
 
@@ -32,6 +34,8 @@ def spam_t():
 
     except FileNotFoundError:
         print("Archivo no encontrado")
+
+#Para mas contenido, buscanos como: xonidu
 
 while True:
     print(chr(27) + f"[1;31m" + "")
