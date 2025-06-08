@@ -6,7 +6,7 @@
 
 ## 🎯 Objetivo
 
-Este proyecto tiene como propósito enseñar cómo automatizar el envío de mensajes con Python utilizando bibliotecas como `pyautogui`. Sirve como base para entender automatización simple con teclado y texto.
+Este proyecto tiene como propósito enseñar cómo automatizar el envío de mensajes con Python utilizando `pyautogui`. Sirve como base para entender automatización simple con teclado y texto.
 
 ---
 
