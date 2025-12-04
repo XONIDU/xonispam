@@ -97,7 +97,7 @@ python start.py
 
 ---
 
-## ✉️ Contacto / Créditos
+## ✉️ Contacto y Créditos
 
 - Proyecto: XONIDU  
 - Contacto: xonidu@gmail.com
