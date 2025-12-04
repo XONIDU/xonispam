@@ -104,6 +104,3 @@ python start.py
 
 ---
 
-Si quieres, preparo:
-- Un archivo systemd/simple service para ejecutar el script al inicio (no recomendado para spam),  
-- O una versión que use una GUI mínima para controlar y pausar la ejecución de forma más segura. ¿Cuál prefieres? 
