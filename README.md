@@ -101,6 +101,6 @@ python start.py
 
 - Proyecto: XONIDU  
 - Contacto: xonidu@gmail.com
-
+- Creador: Darian Alberto Camacho Salas
 ---
 
