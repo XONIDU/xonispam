@@ -86,8 +86,7 @@ python start.py
 ## 📦 Archivos incluidos
 
 - start.py — script principal de XONISPAM.
-- requirements.txt — dependencias Python (pyautogui, pillow, pyperclip).
-
+- requisitos.txt — dependencias Python
 ---
 
 ## ✉️ Contacto y Créditos
