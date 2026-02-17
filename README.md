@@ -20,13 +20,6 @@ El script simula pulsaciones de teclado en la máquina donde se ejecuta, por lo 
 - Dependencias Python listadas en `requirements.txt` (ver archivo adjunto).
 - Entorno con servidor gráfico (Xorg) o soporte para generar eventos de teclado desde Python. En Wayland o entornos restringidos puede no funcionar.
 
-Instalar dependencias (recomendado dentro de un virtualenv):
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
 Dependencias del sistema por plataforma:
 
 - Arch Linux:
