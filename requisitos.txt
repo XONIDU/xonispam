@@ -1,18 +1,5 @@
-#Somos XONINDU
+# XONISPAM - Dependencias Python
+# Somos XONINDU
+# Creador: Darian Alberto Camacho Salas
 
-#Arch linux
-sudo pacman -S python-pip
-pip install pyautogui --break-system-packages
-sudo pacman -S tk
-
-#Ubuntu y derivados
-sudo apt update
-sudo apt install python3 python3-pip -y
-sudo apt install python3-tk python3-dev scrot python3-xlib -y
-pip3 install pyautogui --break-system-packages
-
-#Windows
-pip install pyautogui
-
-#Ejecucion:
-python start.py
+pyautogui==0.9.54
