@@ -1,7 +1,3 @@
-Aquí tienes el README ajustado según tus indicaciones:
-
----
-
 # 📄 XONISPAM
 
 **Advertencia:** Este código tiene únicamente fines educativos. No debe usarse para actividades malintencionadas ni para molestar a otras personas. El autor no se hace responsable del uso indebido.
@@ -15,10 +11,19 @@ XONISPAM es un script Python simple que automatiza la escritura y envío de text
 
 El script simula pulsaciones de teclado en la máquina donde se ejecuta, por lo que el foco debe estar en la aplicación destino (chat, editor, etc.).
 
+## 📥 Instalación
+
+Clona el repositorio desde GitHub:
+
+```bash
+git clone https://github.com/XONIDU/xonispam.git
+cd xonispam
+```
+
 ## ✅ Requisitos
 
 - Python 3.8+ instalado.
-- Dependencias Python listadas en `requirements.txt`.
+- Dependencias Python listadas en `requisitos.txt`.
 - Entorno con servidor gráfico (Xorg) o soporte para generar eventos de teclado desde Python. En Wayland o entornos restringidos puede no funcionar.
 
 ### Dependencias del sistema por plataforma:
@@ -28,7 +33,7 @@ El script simula pulsaciones de teclado en la máquina donde se ejecuta, por lo 
 sudo pacman -S python-pip
 sudo pacman -S tk
 sudo pacman -S scrot xorg-xinput xdotool
-pip install pyautogui --break-system-packages
+pip install -r requisitos.txt --break-system-packages
 ```
 
 #### 🐧 Ubuntu / Debian
@@ -36,13 +41,13 @@ pip install pyautogui --break-system-packages
 sudo apt update
 sudo apt install python3 python3-pip -y
 sudo apt install python3-tk python3-dev scrot xdotool python3-xlib -y
-pip3 install pyautogui --break-system-packages
+pip3 install -r requisitos.txt --break-system-packages
 ```
 
 #### 🪟 Windows
 - Instala Python 3 desde [python.org](https://python.org)
 ```bash
-pip install pyautogui
+pip install -r requisitos.txt
 ```
 
 **Notas:**
@@ -86,11 +91,33 @@ python start.py
 ## 📦 Archivos incluidos
 
 - `start.py` — script principal de XONISPAM.
-- `requirements.txt` — dependencias Python.
+- `requisitos.txt` — dependencias Python.
+- `README.md` — este archivo de documentación.
+
+## 📊 Estadísticas del proyecto
+
+- **Estrellas:** 0
+- **Observadores:** 1
+- **Forks:** 0
+- **Lenguaje principal:** Python 100.0%
 
 ## ✉️ Contacto y Créditos
 
 - **Proyecto:** XONIDU
-- **Contacto:** xonidu@gmail.com  
+- **Contacto:** xonidu@gmail.com
+- **Creador:** Darian Alberto Camacho Salas
 - **#Somos XONINDU**
-- **Creador: Darian Alberto Camacho Salas
+
+## 🔄 Flujos de trabajo sugeridos
+
+Este proyecto puede integrarse con:
+- **Publish Python Package** - Publicar paquete Python en PyPI
+- **Django** - Build y test para proyectos Django
+- **SLSA Generic generator** - Generar proveniencia SLSA3
+
+---
+
+**Sobre el proyecto:** Un recurso para pruebas éticas de spam :3
+
+---
+
