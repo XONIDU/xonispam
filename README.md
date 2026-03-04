@@ -1,5 +1,7 @@
 # 📄 XONISPAM
 
+## **by Darian Alberto Camacho Salas**
+
 **Advertencia:** Este código tiene únicamente fines educativos. No debe usarse para actividades malintencionadas ni para molestar a otras personas. El autor no se hace responsable del uso indebido.
 
 ## 🎯 ¿Qué es XONISPAM?
