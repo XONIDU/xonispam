@@ -1,4 +1,5 @@
 #Creditos: XONIDU
+# Creador: Darian Alberto Camacho Salas
 
 from pyautogui import write, press
 from time import sleep
