@@ -5,7 +5,7 @@
 XONISPAM 2026 - Lanzador Universal de Spam Automatizado
 Este script ejecuta xonispam.py y verifica dependencias
 Desarrollado por: Darian Alberto Camacho Salas
-#Somos XONINDU
+#Somos: XONINDU
 """
 
 import subprocess
