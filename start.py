@@ -5,7 +5,7 @@
 XONISPAM 2026 - Lanzador Universal de Spam Automatizado
 Este script ejecuta xonispam.py y verifica dependencias
 Desarrollado por: Darian Alberto Camacho Salas
-#Somos: XONINDU
+#Somos XONINDU
 """
 
 import subprocess
@@ -56,20 +56,27 @@ def get_linux_distro():
         if os.path.exists('/etc/os-release'):
             with open('/etc/os-release', 'r') as f:
                 content = f.read().lower()
-                if 'ubuntu' in content:
-                    return 'ubuntu'
-                elif 'debian' in content:
-                    return 'debian'
+                if 'ubuntu' in content or 'debian' in content or 'mint' in content or 'antix' in content:
+                    return 'debian-based'
+                elif 'arch' in content or 'manjaro' in content:
+                    return 'arch-based'
                 elif 'fedora' in content:
                     return 'fedora'
                 elif 'centos' in content:
                     return 'centos'
-                elif 'arch' in content:
-                    return 'arch'
-                elif 'manjaro' in content:
-                    return 'manjaro'
-                elif 'mint' in content:
-                    return 'mint'
+                elif 'opensuse' in content:
+                    return 'opensuse'
+        # Fallback por comandos
+        if shutil.which('apt'):
+            return 'debian-based'
+        elif shutil.which('pacman'):
+            return 'arch-based'
+        elif shutil.which('dnf'):
+            return 'fedora'
+        elif shutil.which('yum'):
+            return 'centos'
+        elif shutil.which('zypper'):
+            return 'opensuse'
         return 'linux-generico'
     except:
         return 'linux-generico'
@@ -119,6 +126,73 @@ def check_python():
         subprocess.run(cmd, capture_output=True, check=True)
         return True
     except:
+        return False
+
+def check_pip():
+    """Verifica si pip está instalado y accesible"""
+    try:
+        python_cmd = get_python_command()
+        cmd = python_cmd + ['-m', 'pip', '--version']
+        subprocess.run(cmd, capture_output=True, check=True)
+        return True
+    except:
+        return False
+
+def install_pip_linux():
+    """Instala pip en Linux según la distribución detectada"""
+    distro = get_linux_distro()
+    print(f"{Colors.BOLD}Instalando pip para {distro}...{Colors.END}")
+    
+    if distro == 'debian-based':
+        # Ubuntu, Debian, Mint, antiX
+        try:
+            subprocess.run(['sudo', 'apt', 'update'], check=False)
+            subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-pip'], check=True)
+            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando pip con apt{Colors.END}")
+            return False
+    
+    elif distro == 'arch-based':
+        # Arch, Manjaro
+        try:
+            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm', 'python-pip'], check=True)
+            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando pip con pacman{Colors.END}")
+            return False
+    
+    elif distro == 'fedora':
+        try:
+            subprocess.run(['sudo', 'dnf', 'install', '-y', 'python3-pip'], check=True)
+            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando pip con dnf{Colors.END}")
+            return False
+    
+    elif distro == 'centos':
+        try:
+            subprocess.run(['sudo', 'yum', 'install', '-y', 'python3-pip'], check=True)
+            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando pip con yum{Colors.END}")
+            return False
+    
+    elif distro == 'opensuse':
+        try:
+            subprocess.run(['sudo', 'zypper', 'install', '-y', 'python3-pip'], check=True)
+            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando pip con zypper{Colors.END}")
+            return False
+    
+    else:
+        print(f"{Colors.YELLOW}No se pudo detectar el gestor de paquetes. Instala pip manualmente.{Colors.END}")
         return False
 
 def check_command(comando):
@@ -175,6 +249,17 @@ def install_dependencies(faltantes):
     
     # Instalar paquetes Python
     if python_paquetes:
+        # Verificar que pip existe
+        if not check_pip():
+            print(f"{Colors.YELLOW}Pip no está instalado. Intentando instalarlo...{Colors.END}")
+            if sistema == 'linux':
+                if not install_pip_linux():
+                    print(f"{Colors.RED}No se pudo instalar pip. Instálalo manualmente.{Colors.END}")
+                    return False
+            else:
+                print(f"{Colors.RED}Pip no está instalado. En Windows/Mac instálalo manualmente.{Colors.END}")
+                return False
+        
         print(f"Paquetes Python a instalar: {', '.join(python_paquetes)}")
         
         # Construir comando de instalacion
@@ -182,7 +267,7 @@ def install_dependencies(faltantes):
         
         # Agregar opciones segun sistema
         if sistema == 'linux':
-            if distro in ['arch', 'manjaro', 'fedora']:
+            if distro in ['arch-based', 'fedora']:
                 cmd.append('--break-system-packages')
                 print(f"{Colors.YELLOW}Usando --break-system-packages para {distro}{Colors.END}")
             else:
@@ -220,7 +305,7 @@ def install_dependencies(faltantes):
 
 def install_system_dependencies(paquetes, distro):
     """Instala dependencias del sistema en Linux"""
-    if distro in ['ubuntu', 'debian', 'mint']:
+    if distro == 'debian-based':
         try:
             subprocess.run(['sudo', 'apt', 'update'], check=False)
             subprocess.run(['sudo', 'apt', 'install', '-y'] + paquetes, check=True)
@@ -232,7 +317,18 @@ def install_system_dependencies(paquetes, distro):
             print(f"  sudo apt install {' '.join(paquetes)}")
             return False
     
-    elif distro in ['fedora']:
+    elif distro in ['arch-based']:
+        try:
+            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + paquetes, check=True)
+            print(f"{Colors.GREEN}Dependencias del sistema instaladas{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando dependencias del sistema{Colors.END}")
+            print(f"\nInstala manualmente:")
+            print(f"  sudo pacman -S {' '.join(paquetes)}")
+            return False
+    
+    elif distro == 'fedora':
         try:
             subprocess.run(['sudo', 'dnf', 'install', '-y'] + paquetes, check=True)
             print(f"{Colors.GREEN}Dependencias del sistema instaladas{Colors.END}")
@@ -243,15 +339,26 @@ def install_system_dependencies(paquetes, distro):
             print(f"  sudo dnf install {' '.join(paquetes)}")
             return False
     
-    elif distro in ['arch', 'manjaro']:
+    elif distro == 'centos':
         try:
-            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + paquetes, check=True)
+            subprocess.run(['sudo', 'yum', 'install', '-y'] + paquetes, check=True)
             print(f"{Colors.GREEN}Dependencias del sistema instaladas{Colors.END}")
             return True
         except:
             print(f"{Colors.RED}Error instalando dependencias del sistema{Colors.END}")
             print(f"\nInstala manualmente:")
-            print(f"  sudo pacman -S {' '.join(paquetes)}")
+            print(f"  sudo yum install {' '.join(paquetes)}")
+            return False
+    
+    elif distro == 'opensuse':
+        try:
+            subprocess.run(['sudo', 'zypper', 'install', '-y'] + paquetes, check=True)
+            print(f"{Colors.GREEN}Dependencias del sistema instaladas{Colors.END}")
+            return True
+        except:
+            print(f"{Colors.RED}Error instalando dependencias del sistema{Colors.END}")
+            print(f"\nInstala manualmente:")
+            print(f"  sudo zypper install {' '.join(paquetes)}")
             return False
     
     return False
@@ -382,6 +489,19 @@ def main():
                                    capture_output=True, text=True).stdout.strip()
     print(f"{Colors.BOLD}Python:{Colors.END} {python_version}")
     print(f"{Colors.BOLD}Directorio:{Colors.END} {os.path.dirname(os.path.abspath(__file__))}")
+    
+    # Verificar pip
+    if not check_pip():
+        print(f"\n{Colors.YELLOW}Pip no esta instalado. Intentando instalarlo...{Colors.END}")
+        if get_system() == 'linux':
+            if not install_pip_linux():
+                print(f"{Colors.RED}No se pudo instalar pip. Instálalo manualmente.{Colors.END}")
+                input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
+                return
+        else:
+            print(f"{Colors.RED}Pip no esta instalado. En Windows/Mac instálalo manualmente.{Colors.END}")
+            input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
+            return
     
     # Verificar dependencias
     faltantes = check_dependencies()
