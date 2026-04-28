@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-XONISPAM 2026 - Lanzador Universal de Spam Automatizado
-Este script ejecuta xonispam.py y verifica dependencias
-Desarrollado por: Darian Alberto Camacho Salas
+XONISPAM 2026 - Lanzador Universal con Gestor de Automatización
+Herramienta de spam educativo para pruebas de teclado
+Desarrollador: Darian Alberto Camacho Salas
+Organización: XONIDU
 #Somos XONINDU
 """
 
@@ -13,21 +14,24 @@ import sys
 import os
 import platform
 import shutil
-import importlib.util
+import time
+from pathlib import Path
 
+# ============================================================================
 # Colores para terminal
+# ============================================================================
 class Colors:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
     RED = '\033[91m'
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    BLUE = '\033[94m'
     END = '\033[0m'
     BOLD = '\033[1m'
     
     @staticmethod
     def supports_color():
-        """Verifica si la terminal soporta colores"""
         if platform.system() == 'Windows':
             try:
                 import ctypes
@@ -37,21 +41,20 @@ class Colors:
                 return False
         return True
 
-# Desactivar colores si no hay soporte
 if not Colors.supports_color():
     for attr in dir(Colors):
         if not attr.startswith('_') and attr != 'supports_color':
             setattr(Colors, attr, '')
 
+# ============================================================================
+# Detección del sistema
+# ============================================================================
 def get_system():
-    """Detecta el sistema operativo"""
     return platform.system().lower()
 
 def get_linux_distro():
-    """Detecta la distribucion de Linux"""
     if get_system() != 'linux':
         return None
-    
     try:
         if os.path.exists('/etc/os-release'):
             with open('/etc/os-release', 'r') as f:
@@ -62,11 +65,10 @@ def get_linux_distro():
                     return 'arch-based'
                 elif 'fedora' in content:
                     return 'fedora'
-                elif 'centos' in content:
+                elif 'centos' in content or 'rhel' in content:
                     return 'centos'
                 elif 'opensuse' in content:
                     return 'opensuse'
-        # Fallback por comandos
         if shutil.which('apt'):
             return 'debian-based'
         elif shutil.which('pacman'):
@@ -82,7 +84,6 @@ def get_linux_distro():
         return 'linux-generico'
 
 def get_python_command():
-    """Obtiene el comando Python correcto"""
     if get_system() == 'windows':
         return ['python']
     else:
@@ -92,11 +93,42 @@ def get_python_command():
         except:
             return ['python']
 
-def print_banner():
-    """Muestra el banner de XONISPAM"""
+def get_pip_command():
+    return [sys.executable, '-m', 'pip']
+
+def get_install_flags():
+    flags = []
     sistema = get_system()
     distro = get_linux_distro()
-    
+    if sistema == 'linux':
+        if distro in ['arch-based', 'fedora']:
+            flags.append('--break-system-packages')
+        else:
+            flags.append('--user')
+    elif sistema == 'darwin':
+        flags.append('--user')
+    return flags
+
+def get_script_dir():
+    return os.path.dirname(os.path.abspath(__file__))
+
+def get_xonispam_path():
+    """Detecta la ruta de xonispam.py en múltiples ubicaciones"""
+    script_dir = get_script_dir()
+    rutas = [
+        os.path.join(script_dir, 'xonispam.py'),
+        '/usr/share/xonispam/xonispam.py',
+        os.path.join(os.path.expanduser("~"), '.xonispam', 'xonispam.py'),
+        os.path.join(os.getcwd(), 'xonispam.py')
+    ]
+    for r in rutas:
+        if os.path.exists(r):
+            return r
+    return None
+
+def print_banner():
+    sistema = get_system()
+    distro = get_linux_distro()
     sistema_texto = {
         'windows': 'WINDOWS',
         'linux': f'LINUX ({distro.upper()})' if distro else 'LINUX',
@@ -104,23 +136,50 @@ def print_banner():
     }.get(sistema, 'DESCONOCIDO')
     
     banner = f"""
-{Colors.BLUE}{Colors.BOLD}═══════════════════════════════════════════════════════════
-                    XONISPAM 2026 v1.0                    
-              Herramienta de Automatización de Teclado            
-              Envia mensajes repetidos o                
-              contenido de archivos .txt                        
-                                                          
-              Sistema detectado: {sistema_texto}            
-                                                          
-              Desarrollado por: Darian Alberto            
-              Camacho Salas                               
-              #Somos XONINDU
-═══════════════════════════════════════════════════════════{Colors.END}
+{Colors.PURPLE}{Colors.BOLD}╔══════════════════════════════════════════════════════════╗
+║                    XONISPAM 2026 v1.0                    ║
+║              Herramienta de Automatización               ║
+║                  Spam educativo para                     ║
+║                   pruebas de teclado                     ║
+║                                                            ║
+║               Sistema detectado: {sistema_texto:<27} ║
+║                                                            ║
+║               Desarrollado por: Darian Alberto           ║
+║                      Camacho Salas                       ║
+║                      Organización: XONIDU                ║
+║                      #Somos XONINDU                      ║
+╚══════════════════════════════════════════════════════════╝{Colors.END}
     """
     print(banner)
 
+def mostrar_ayuda():
+    ayuda = f"""
+{Colors.BOLD}USO DE XONISPAM:{Colors.END}
+
+  xonispam
+
+{Colors.BOLD}MODO DE USO:{Colors.END}
+
+  [0] SPAM normal - Envia un mismo mensaje N veces
+  [1] SPAM de texto - Envia palabra por palabra desde archivo .txt
+  [2] SALIR
+
+{Colors.BOLD}CONTROLES:{Colors.END}
+
+  Ctrl+C     - Detener el envio
+  El programa da 3 segundos para enfocar la ventana destino
+
+{Colors.BOLD}ADVERTENCIA:{Colors.END}
+
+  Este programa es SOLO para fines educativos.
+  No usar para acosar o enviar mensajes no solicitados.
+    """
+    print(ayuda)
+
+# ============================================================================
+# Verificación de dependencias
+# ============================================================================
 def check_python():
-    """Verifica Python instalado"""
     try:
         cmd = get_python_command() + ['--version']
         subprocess.run(cmd, capture_output=True, check=True)
@@ -129,457 +188,206 @@ def check_python():
         return False
 
 def check_pip():
-    """Verifica si pip está instalado y accesible"""
     try:
-        python_cmd = get_python_command()
-        cmd = python_cmd + ['-m', 'pip', '--version']
+        cmd = get_pip_command() + ['--version']
         subprocess.run(cmd, capture_output=True, check=True)
         return True
     except:
         return False
 
 def install_pip_linux():
-    """Instala pip en Linux según la distribución detectada"""
     distro = get_linux_distro()
-    print(f"{Colors.BOLD}Instalando pip para {distro}...{Colors.END}")
-    
+    print(f"{Colors.YELLOW}Instalando pip en Linux ({distro})...{Colors.END}")
     if distro == 'debian-based':
-        # Ubuntu, Debian, Mint, antiX
         try:
             subprocess.run(['sudo', 'apt', 'update'], check=False)
             subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-pip'], check=True)
-            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
             return True
         except:
-            print(f"{Colors.RED}Error instalando pip con apt{Colors.END}")
             return False
-    
     elif distro == 'arch-based':
-        # Arch, Manjaro
         try:
             subprocess.run(['sudo', 'pacman', '-S', '--noconfirm', 'python-pip'], check=True)
-            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
             return True
         except:
-            print(f"{Colors.RED}Error instalando pip con pacman{Colors.END}")
             return False
-    
     elif distro == 'fedora':
         try:
             subprocess.run(['sudo', 'dnf', 'install', '-y', 'python3-pip'], check=True)
-            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
             return True
         except:
-            print(f"{Colors.RED}Error instalando pip con dnf{Colors.END}")
             return False
-    
-    elif distro == 'centos':
-        try:
-            subprocess.run(['sudo', 'yum', 'install', '-y', 'python3-pip'], check=True)
-            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando pip con yum{Colors.END}")
-            return False
-    
-    elif distro == 'opensuse':
-        try:
-            subprocess.run(['sudo', 'zypper', 'install', '-y', 'python3-pip'], check=True)
-            print(f"{Colors.GREEN}Pip instalado correctamente{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando pip con zypper{Colors.END}")
-            return False
-    
-    else:
-        print(f"{Colors.YELLOW}No se pudo detectar el gestor de paquetes. Instala pip manualmente.{Colors.END}")
-        return False
-
-def check_command(comando):
-    """Verifica si un comando existe"""
-    return shutil.which(comando) is not None
-
-def check_python_module(module_name):
-    """Verifica si un modulo de Python esta instalado"""
-    return importlib.util.find_spec(module_name) is not None
-
-def check_dependencies():
-    """Verifica las dependencias de Python necesarias"""
-    print(f"\n{Colors.BOLD}Verificando dependencias de Python...{Colors.END}")
-    
-    dependencias = [
-        ('pyautogui', 'pyautogui', 'Automatización', 'pyautogui'),
-    ]
-    
-    faltantes = []
-    
-    for modulo, paquete, desc, import_name in dependencias:
-        if check_python_module(import_name):
-            print(f"{Colors.GREEN}  - {modulo}: OK{Colors.END}")
-        else:
-            print(f"{Colors.YELLOW}  - {modulo}: FALTANTE{Colors.END}")
-            faltantes.append(paquete)
-    
-    # Verificar dependencias del sistema para pyautogui en Linux
-    if get_system() == 'linux':
-        system_deps = ['scrot', 'xdotool']
-        for dep in system_deps:
-            if check_command(dep):
-                print(f"{Colors.GREEN}  - {dep} (sistema): OK{Colors.END}")
-            else:
-                print(f"{Colors.YELLOW}  - {dep} (sistema): FALTANTE (recomendado){Colors.END}")
-                if f'sistema-{dep}' not in faltantes:
-                    faltantes.append(f'sistema-{dep}')
-    
-    return faltantes
-
-def install_dependencies(faltantes):
-    """Instala las dependencias faltantes"""
-    if not faltantes:
-        return True
-    
-    print(f"\n{Colors.BOLD}Instalando dependencias faltantes...{Colors.END}")
-    
-    sistema = get_system()
-    distro = get_linux_distro()
-    
-    # Separar paquetes Python de dependencias del sistema
-    python_paquetes = [p for p in faltantes if not p.startswith('sistema-')]
-    sistema_paquetes = [p.replace('sistema-', '') for p in faltantes if p.startswith('sistema-')]
-    
-    # Instalar paquetes Python
-    if python_paquetes:
-        # Verificar que pip existe
-        if not check_pip():
-            print(f"{Colors.YELLOW}Pip no está instalado. Intentando instalarlo...{Colors.END}")
-            if sistema == 'linux':
-                if not install_pip_linux():
-                    print(f"{Colors.RED}No se pudo instalar pip. Instálalo manualmente.{Colors.END}")
-                    return False
-            else:
-                print(f"{Colors.RED}Pip no está instalado. En Windows/Mac instálalo manualmente.{Colors.END}")
-                return False
-        
-        print(f"Paquetes Python a instalar: {', '.join(python_paquetes)}")
-        
-        # Construir comando de instalacion
-        cmd = [sys.executable, '-m', 'pip', 'install']
-        
-        # Agregar opciones segun sistema
-        if sistema == 'linux':
-            if distro in ['arch-based', 'fedora']:
-                cmd.append('--break-system-packages')
-                print(f"{Colors.YELLOW}Usando --break-system-packages para {distro}{Colors.END}")
-            else:
-                cmd.append('--user')
-        elif sistema == 'darwin':
-            cmd.append('--user')
-        
-        cmd.extend(python_paquetes)
-        
-        # Intentar instalacion
-        try:
-            print(f"Ejecutando: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True)
-            print(f"{Colors.GREEN}Dependencias de Python instaladas correctamente{Colors.END}")
-        except subprocess.CalledProcessError as e:
-            print(f"{Colors.RED}Error instalando dependencias: {e}{Colors.END}")
-            print(f"\n{Colors.YELLOW}Intentando metodo alternativo...{Colors.END}")
-            
-            # Segundo intento: solo --user
-            try:
-                cmd2 = [sys.executable, '-m', 'pip', 'install', '--user'] + python_paquetes
-                subprocess.run(cmd2, check=True)
-                print(f"{Colors.GREEN}Instaladas con --user{Colors.END}")
-            except:
-                print(f"{Colors.RED}Fallo la instalacion{Colors.END}")
-                print(f"\nInstala manualmente:")
-                print(f"  pip install {' '.join(python_paquetes)}")
-    
-    # Instalar dependencias del sistema si faltan
-    if sistema_paquetes and sistema == 'linux':
-        print(f"\n{Colors.YELLOW}Instalando dependencias del sistema...{Colors.END}")
-        install_system_dependencies(sistema_paquetes, distro)
-    
-    return True
-
-def install_system_dependencies(paquetes, distro):
-    """Instala dependencias del sistema en Linux"""
-    if distro == 'debian-based':
-        try:
-            subprocess.run(['sudo', 'apt', 'update'], check=False)
-            subprocess.run(['sudo', 'apt', 'install', '-y'] + paquetes, check=True)
-            print(f"{Colors.GREEN}Dependencias del sistema instaladas{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando dependencias del sistema{Colors.END}")
-            print(f"\nInstala manualmente:")
-            print(f"  sudo apt install {' '.join(paquetes)}")
-            return False
-    
-    elif distro in ['arch-based']:
-        try:
-            subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + paquetes, check=True)
-            print(f"{Colors.GREEN}Dependencias del sistema instaladas{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando dependencias del sistema{Colors.END}")
-            print(f"\nInstala manualmente:")
-            print(f"  sudo pacman -S {' '.join(paquetes)}")
-            return False
-    
-    elif distro == 'fedora':
-        try:
-            subprocess.run(['sudo', 'dnf', 'install', '-y'] + paquetes, check=True)
-            print(f"{Colors.GREEN}Dependencias del sistema instaladas{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando dependencias del sistema{Colors.END}")
-            print(f"\nInstala manualmente:")
-            print(f"  sudo dnf install {' '.join(paquetes)}")
-            return False
-    
-    elif distro == 'centos':
-        try:
-            subprocess.run(['sudo', 'yum', 'install', '-y'] + paquetes, check=True)
-            print(f"{Colors.GREEN}Dependencias del sistema instaladas{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando dependencias del sistema{Colors.END}")
-            print(f"\nInstala manualmente:")
-            print(f"  sudo yum install {' '.join(paquetes)}")
-            return False
-    
-    elif distro == 'opensuse':
-        try:
-            subprocess.run(['sudo', 'zypper', 'install', '-y'] + paquetes, check=True)
-            print(f"{Colors.GREEN}Dependencias del sistema instaladas{Colors.END}")
-            return True
-        except:
-            print(f"{Colors.RED}Error instalando dependencias del sistema{Colors.END}")
-            print(f"\nInstala manualmente:")
-            print(f"  sudo zypper install {' '.join(paquetes)}")
-            return False
-    
     return False
 
-def mostrar_ayuda():
-    """Muestra ayuda de uso"""
-    ayuda = f"""
-{Colors.BOLD}USO DE XONISPAM:{Colors.END}
+def install_pip_windows():
+    print(f"{Colors.YELLOW}Instalando pip en Windows...{Colors.END}")
+    try:
+        subprocess.run([sys.executable, '-m', 'ensurepip', '--upgrade'], check=True)
+        return True
+    except:
+        return False
 
-  python start.py
+def check_pyautogui():
+    try:
+        __import__('pyautogui')
+        return True
+    except ImportError:
+        return False
 
-{Colors.BOLD}DESCRIPCION:{Colors.END}
-
-  XONISPAM es una herramienta que automatiza el envio de mensajes
-  simulando pulsaciones de teclado. Tiene dos modos de uso:
-
-  1. SPAM NORMAL: Envia un mismo mensaje N veces
-  2. SPAM DE TEXTO: Lee un archivo .txt y envia palabra por palabra
-
-{Colors.BOLD}ADVERTENCIA:{Colors.END}
-
-  Este programa es SOLO para fines educativos. No lo uses para:
-  - Acosar o molestar a otras personas
-  - Enviar mensajes no solicitados
-  - Actividades malintencionadas
-
-{Colors.BOLD}CONTROLES:{Colors.END}
-
-  - Para detener la ejecucion: Ctrl+C
-  - El programa da 3 segundos para colocar el foco en la ventana destino
-    """
-    print(ayuda)
-
-def verificar_importaciones():
-    """Verifica que todas las importaciones necesarias funcionen"""
-    print(f"\n{Colors.BOLD}Verificando importaciones...{Colors.END}")
-    
-    modulos = [
-        ('pyautogui', 'pyautogui'),
-    ]
-    
-    todos_ok = True
-    for modulo, nombre in modulos:
+def install_pyautogui():
+    print(f"{Colors.YELLOW}Instalando pyautogui...{Colors.END}")
+    if not check_pip():
+        return False
+    flags = get_install_flags()
+    try:
+        cmd = get_pip_command() + ['install', 'pyautogui'] + flags
+        subprocess.run(cmd, check=True, capture_output=True)
+        print(f"{Colors.GREEN}pyautogui instalado correctamente.{Colors.END}")
+        return True
+    except:
         try:
-            __import__(modulo)
-            print(f"{Colors.GREEN}  - {nombre}: OK{Colors.END}")
-        except ImportError:
-            print(f"{Colors.RED}  - {nombre}: FALLO{Colors.END}")
-            todos_ok = False
-    
-    return todos_ok
+            cmd = get_pip_command() + ['install', 'pyautogui']
+            subprocess.run(cmd, check=True)
+            print(f"{Colors.GREEN}pyautogui instalado correctamente.{Colors.END}")
+            return True
+        except:
+            return False
 
-def crear_accesos_directos():
-    """Crea accesos directos para cada sistema"""
-    sistema = get_system()
+def check_system_deps_linux():
+    """Verifica dependencias del sistema necesarias para pyautogui en Linux"""
+    if get_system() != 'linux':
+        return True
     
-    if sistema == 'windows':
-        # Crear .bat para Windows
-        with open('INICIAR_XONISPAM.bat', 'w') as f:
-            f.write("""@echo off
-title XONISPAM 2026 - Automatizacion de Teclado
-color 1F
-echo ========================================
-echo      XONISPAM 2026 - Automatizacion
-echo      Desarrollado por Darian Alberto
-echo ========================================
-echo.
-python start.py
-pause
-""")
-        print(f"{Colors.GREEN}Creado INICIAR_XONISPAM.bat - Haz doble clic para ejecutar{Colors.END}")
+    distro = get_linux_distro()
+    faltantes = []
     
-    elif sistema == 'linux':
-        # Crear .sh para Linux
-        with open('INICIAR_XONISPAM.sh', 'w') as f:
-            f.write("""#!/bin/bash
-echo "========================================"
-echo "      XONISPAM 2026 - Automatizacion"
-echo "      Desarrollado por Darian Alberto"
-echo "========================================"
-echo ""
-python3 start.py
-read -p "Presiona Enter para salir"
-""")
-        os.chmod('INICIAR_XONISPAM.sh', 0o755)
-        print(f"{Colors.GREEN}Creado INICIAR_XONISPAM.sh - Ejecuta con: ./INICIAR_XONISPAM.sh{Colors.END}")
+    if not shutil.which('scrot'):
+        faltantes.append('scrot')
+    if not shutil.which('xdotool'):
+        faltantes.append('xdotool')
     
-    elif sistema == 'darwin':
-        # Crear .command para Mac
-        with open('INICIAR_XONISPAM.command', 'w') as f:
-            f.write("""#!/bin/bash
-cd "$(dirname "$0")"
-echo "========================================"
-echo "      XONISPAM 2026 - Automatizacion"
-echo "      Desarrollado por Darian Alberto"
-echo "========================================"
-echo ""
-python3 start.py
-""")
-        os.chmod('INICIAR_XONISPAM.command', 0o755)
-        print(f"{Colors.GREEN}Creado INICIAR_XONISPAM.command - Haz doble clic para ejecutar{Colors.END}")
+    if faltantes:
+        print(f"{Colors.YELLOW}Faltan dependencias del sistema: {', '.join(faltantes)}{Colors.END}")
+        respuesta = input("¿Instalarlas automáticamente? (s/n): ")
+        if respuesta.lower() == 's':
+            if distro == 'debian-based':
+                try:
+                    subprocess.run(['sudo', 'apt', 'update'], check=False)
+                    subprocess.run(['sudo', 'apt', 'install', '-y'] + faltantes, check=True)
+                    print(f"{Colors.GREEN}Dependencias instaladas{Colors.END}")
+                    return True
+                except:
+                    print(f"{Colors.RED}Error instalando{Colors.END}")
+                    return False
+            elif distro == 'arch-based':
+                try:
+                    subprocess.run(['sudo', 'pacman', '-S', '--noconfirm'] + faltantes, check=True)
+                    print(f"{Colors.GREEN}Dependencias instaladas{Colors.END}")
+                    return True
+                except:
+                    print(f"{Colors.RED}Error instalando{Colors.END}")
+                    return False
+            elif distro == 'fedora':
+                try:
+                    subprocess.run(['sudo', 'dnf', 'install', '-y'] + faltantes, check=True)
+                    print(f"{Colors.GREEN}Dependencias instaladas{Colors.END}")
+                    return True
+                except:
+                    print(f"{Colors.RED}Error instalando{Colors.END}")
+                    return False
+        else:
+            print(f"{Colors.YELLOW}Instalación manual requerida:{Colors.END}")
+            if distro == 'debian-based':
+                print(f"  sudo apt install {' '.join(faltantes)}")
+            elif distro == 'arch-based':
+                print(f"  sudo pacman -S {' '.join(faltantes)}")
+            return False
+    return True
 
+# ============================================================================
+# Función principal
+# ============================================================================
 def main():
-    """Funcion principal"""
-    # Limpiar pantalla
     if get_system() == 'windows':
         os.system('cls')
     else:
         os.system('clear')
     
-    # Mostrar banner
     print_banner()
     
-    # Verificar si hay argumentos de ayuda
     if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help', '/?']:
         mostrar_ayuda()
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-        return
-    
-    # Verificar Python
-    if not check_python():
-        print(f"\n{Colors.RED}Error: Python no esta instalado{Colors.END}")
-        print("Instala Python desde: https://www.python.org/downloads/")
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-        return
-    
-    python_version = subprocess.run(get_python_command() + ['--version'], 
-                                   capture_output=True, text=True).stdout.strip()
-    print(f"{Colors.BOLD}Python:{Colors.END} {python_version}")
-    print(f"{Colors.BOLD}Directorio:{Colors.END} {os.path.dirname(os.path.abspath(__file__))}")
-    
-    # Verificar pip
-    if not check_pip():
-        print(f"\n{Colors.YELLOW}Pip no esta instalado. Intentando instalarlo...{Colors.END}")
-        if get_system() == 'linux':
-            if not install_pip_linux():
-                print(f"{Colors.RED}No se pudo instalar pip. Instálalo manualmente.{Colors.END}")
-                input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-                return
-        else:
-            print(f"{Colors.RED}Pip no esta instalado. En Windows/Mac instálalo manualmente.{Colors.END}")
+        if get_system() != 'windows':
             input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-            return
-    
-    # Verificar dependencias
-    faltantes = check_dependencies()
-    
-    if faltantes:
-        print(f"\n{Colors.YELLOW}Faltan dependencias{Colors.END}")
-        respuesta = input("Instalar automaticamente? (s/n): ")
-        
-        if respuesta.lower() == 's':
-            install_dependencies(faltantes)
-        else:
-            print(f"\nPuedes instalarlas manualmente con:")
-            print("  pip install pyautogui")
-            if any(p.startswith('sistema-') for p in faltantes):
-                print("\nY dependencias del sistema:")
-                if get_system() == 'linux':
-                    print("  sudo apt install scrot xdotool  # Ubuntu/Debian")
-                    print("  sudo pacman -S scrot xdotool    # Arch")
-                    print("  sudo dnf install scrot xdotool  # Fedora")
-    
-    # Verificar que existe xonispam.py
-    if not os.path.exists('xonispam.py'):
-        print(f"\n{Colors.RED}Error: No se encuentra xonispam.py{Colors.END}")
-        print("Asegurate de que xonispam.py esta en el mismo directorio")
-        print("\nPuedes descargarlo desde:")
-        print("  https://github.com/XONIDU/xonispam")
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
         return
     
-    # Verificar que las importaciones funcionan
-    print(f"\n{Colors.BOLD}Verificando que todo funcione...{Colors.END}")
-    if not verificar_importaciones():
-        print(f"\n{Colors.RED}Error: No se puede importar pyautogui{Colors.END}")
-        print("El programa no puede continuar sin esta dependencia")
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
-        return
+    if not check_python():
+        print(f"\n{Colors.RED}❌ Python no esta instalado{Colors.END}")
+        sys.exit(1)
     
-    print(f"\n{Colors.BOLD}Iniciando XONISPAM...{Colors.END}")
-    print(f"{Colors.BOLD}Para salir en cualquier momento:{Colors.END} Ctrl+C")
-    print("-" * 60)
+    ver_py = subprocess.run(get_python_command() + ['--version'], capture_output=True, text=True).stdout.strip()
+    print(f"{Colors.BOLD}Python:{Colors.END} {ver_py}")
     
-    # EJECUTAR xonispam.py - ESTA ES LA PARTE IMPORTANTE
+    if not check_pip():
+        print(f"\n{Colors.YELLOW}⚠️ Pip no encontrado. Instalando...{Colors.END}")
+        sistema = get_system()
+        if sistema == 'linux':
+            if not install_pip_linux():
+                print(f"{Colors.RED}No se pudo instalar pip.{Colors.END}")
+                sys.exit(1)
+        elif sistema == 'windows':
+            if not install_pip_windows():
+                print(f"{Colors.RED}No se pudo instalar pip.{Colors.END}")
+                sys.exit(1)
+    else:
+        print(f"{Colors.GREEN}✓ Pip disponible{Colors.END}")
+    
+    if not check_pyautogui():
+        print(f"\n{Colors.YELLOW}⚠️ pyautogui no encontrado. Instalando...{Colors.END}")
+        if not install_pyautogui():
+            print(f"{Colors.RED}No se pudo instalar pyautogui.{Colors.END}")
+            sys.exit(1)
+    else:
+        print(f"{Colors.GREEN}✓ pyautogui disponible{Colors.END}")
+    
+    # Verificar dependencias del sistema en Linux
+    if get_system() == 'linux':
+        if not check_system_deps_linux():
+            print(f"{Colors.YELLOW}⚠️ Algunas funciones pueden no funcionar correctamente{Colors.END}")
+            time.sleep(2)
+    
+    ruta_xonispam = get_xonispam_path()
+    if not ruta_xonispam:
+        print(f"\n{Colors.RED}❌ No se encuentra xonispam.py{Colors.END}")
+        print(f"Buscado en: /usr/share/xonispam/, ~/.xonispam/, directorio actual")
+        sys.exit(1)
+    
+    xonispam_dir = os.path.dirname(ruta_xonispam)
+    print(f"{Colors.GREEN}✓ xonispam.py encontrado en: {xonispam_dir}{Colors.END}")
+    
+    os.chdir(xonispam_dir)
+    print(f"\n{Colors.BOLD}🚀 Iniciando XONISPAM...{Colors.END}")
+    print(f"{Colors.CYAN}Para detener el envio: Ctrl+C{Colors.END}")
+    print(f"{Colors.YELLOW}El programa da 3 segundos para enfocar la ventana destino{Colors.END}")
+    print("-"*50)
+    
     try:
         python_cmd = get_python_command()
-        cmd = python_cmd + ['xonispam.py']
-        print(f"Ejecutando: {' '.join(cmd)}")
-        print("-" * 60)
-        
-        # Ejecutar xonispam.py
-        resultado = subprocess.run(cmd)
-        
-        if resultado.returncode != 0:
-            print(f"\n{Colors.RED}Error: xonispam.py termino con codigo {resultado.returncode}{Colors.END}")
-            
-    except FileNotFoundError:
-        print(f"\n{Colors.RED}Error: No se encuentra xonispam.py{Colors.END}")
+        subprocess.run(python_cmd + [ruta_xonispam])
     except KeyboardInterrupt:
-        print(f"\n{Colors.YELLOW}Programa detenido por el usuario{Colors.END}")
+        print(f"\n{Colors.YELLOW}🛑 Programa detenido por el usuario.{Colors.END}")
     except Exception as e:
-        print(f"\n{Colors.RED}Error ejecutando xonispam.py: {e}{Colors.END}")
+        print(f"\n{Colors.RED}❌ Error: {e}{Colors.END}")
     
-    print(f"\n{Colors.BLUE}Gracias por usar XONISPAM 2026{Colors.END}")
-    print(f"{Colors.BLUE}Desarrollado por Darian Alberto Camacho Salas{Colors.END}")
+    print(f"\n{Colors.GREEN}Gracias por usar XONISPAM{Colors.END}")
     print(f"{Colors.BLUE}#Somos XONINDU{Colors.END}")
-    
-    # Pausa al final (excepto en Windows que ya tiene pausa por el .bat)
     if get_system() != 'windows':
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
+        input(f"{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
 
 if __name__ == '__main__':
     try:
-        # Crear accesos directos
-        crear_accesos_directos()
-        
-        # Ejecutar programa principal
         main()
     except KeyboardInterrupt:
         print(f"\n{Colors.YELLOW}Saliendo...{Colors.END}")
     except Exception as e:
         print(f"\n{Colors.RED}Error inesperado: {e}{Colors.END}")
-        input(f"\n{Colors.YELLOW}Presiona Enter para salir...{Colors.END}")
