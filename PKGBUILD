@@ -14,21 +14,11 @@ source=("$pkgname-$pkgver.tar.gz::https://github.com/XONIDU/xonispam/archive/v$p
 sha256sums=('SKIP')
 
 package() {
-    # Crear directorios
-    install -dm755 "$pkgdir/usr/share/$pkgname"
-    install -dm755 "$pkgdir/usr/bin"
-    install -dm755 "$pkgdir/usr/share/doc/$pkgname"
-    install -dm755 "$pkgdir/usr/share/licenses/$pkgname"
+    cd "$srcdir/$pkgname-$pkgver"
     
-    # Instalar programa principal
-    install -Dm644 "$srcdir/$pkgname-$pkgver/xonispam.py" "$pkgdir/usr/share/$pkgname/xonispam.py"
+    install -Dm755 start.py "$pkgdir/usr/bin/$pkgname"
+    install -Dm644 xonispam.py "$pkgdir/usr/share/$pkgname/xonispam.py"
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
     
-    # Instalar lanzador
-    install -Dm755 "$srcdir/$pkgname-$pkgver/start.py" "$pkgdir/usr/bin/xonispam"
-    
-    # Instalar documentación
-    install -Dm644 "$srcdir/$pkgname-$pkgver/README.md" "$pkgdir/usr/share/doc/$pkgname/README.md"
-    
-    # Instalar licencia
-    install -Dm644 "$srcdir/$pkgname-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    [ -f LICENSE ] && install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
