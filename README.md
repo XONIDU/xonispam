@@ -54,6 +54,24 @@ sudo apt install python3-tk python3-dev scrot xdotool python3-xlib -y
 pip3 install -r requisitos.txt --break-system-packages
 ```
 
+
+### Opción 2 – Comando `xoninstall` (recomendado para futuras herramientas XONI)
+
+Agrega la siguiente función a tu `~/.bashrc` con un solo comando:
+
+```bash
+echo 'xoninstall() { if [ -z "$1" ]; then echo "Uso: xoninstall <repo>"; echo "Ej: xoninstall xoniran"; else git clone "https>
+```
+
+Luego simplemente escribe:
+
+```bash
+xoninstall xonispam
+cd xonispam
+pip install -r requisitos.txt
+python start.py
+```
+
 #### 🪟 Windows
 1. Instala Python 3 desde [python.org](https://python.org)
 2. Abre una terminal (cmd o PowerShell) y ejecuta:
