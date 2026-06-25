@@ -17,18 +17,32 @@ El script simula pulsaciones de teclado en la máquina donde se ejecuta, por lo 
 
 ## 📥 Instalación
 
-Clona el repositorio desde GitHub:
+### 🐧 Arch Linux (AUR - Recomendado)
 
 ```bash
+# Instalar desde AUR con yay
+yay -S xonispam
+
+# Ejecutar
+xonispam
+```
+
+### 📦 Desde GitHub (desarrollo)
+
+```bash
+# Clonar el repositorio
 git clone https://github.com/XONIDU/xonispam.git
 cd xonispam
+
+# Ejecutar
+python start.py
 ```
 
 ## ✅ Requisitos
 
 - Python 3.8+ instalado
-- Dependencias Python listadas en `requisitos.txt`
-- Entorno con servidor gráfico (Xorg) o soporte para generar eventos de teclado desde Python. En Wayland o entornos restringidos puede no funcionar.
+- Dependencias Python: `pyautogui`
+- Entorno con servidor gráfico (Xorg) o soporte para generar eventos de teclado desde Python
 
 ### Dependencias del sistema por plataforma:
 
@@ -37,7 +51,7 @@ cd xonispam
 # Instalar dependencias del sistema
 sudo pacman -S python-pip tk scrot xorg-xinput xdotool
 
-# Instalar dependencias Python
+# Instalar dependencias Python (si no usas AUR)
 pip install -r requisitos.txt --break-system-packages
 ```
 
@@ -54,24 +68,6 @@ sudo apt install python3-tk python3-dev scrot xdotool python3-xlib -y
 pip3 install -r requisitos.txt --break-system-packages
 ```
 
-
-### Opción 2 – Comando `xoninstall` (recomendado para futuras herramientas XONI)
-
-Agrega la siguiente función a tu `~/.bashrc` con un solo comando:
-
-```bash
-echo 'xoninstall() { if [ -z "$1" ]; then echo "Uso: xoninstall <repo>"; echo "Ej: xoninstall xoniran"; else git clone "https>
-```
-
-Luego simplemente escribe:
-
-```bash
-xoninstall xonispam
-cd xonispam
-pip install -r requisitos.txt
-python start.py
-```
-
 #### 🪟 Windows
 1. Instala Python 3 desde [python.org](https://python.org)
 2. Abre una terminal (cmd o PowerShell) y ejecuta:
@@ -79,21 +75,67 @@ python start.py
 pip install -r requisitos.txt
 ```
 
+#### 🪟 Windows - Ejecutar como Administrador
+
+Para ejecutar XONISPAM con permisos de administrador en Windows, usa el archivo `XONISPAM_ADMIN.bat`:
+
+```batch
+@echo off
+title XONISPAM 2026 - Administrador
+color 1F
+
+:: Solicitar permisos de administrador
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Solicitando permisos de administrador...
+    echo.
+    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
+    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
+    "%temp%\getadmin.vbs"
+    del "%temp%\getadmin.vbs"
+    exit /B
+)
+
+:: Ejecutar start.py con permisos de administrador
+cls
+echo ============================================================
+echo              XONISPAM 2026 - Automatizacion de Teclado
+echo              (Modo Administrador)
+echo ============================================================
+echo.
+echo [OK] Permisos de administrador obtenidos
+echo.
+echo Iniciando XONISPAM...
+echo.
+
+python start.py
+pause
+```
+
+**Guardar como:** `XONISPAM_ADMIN.bat` (en la misma carpeta que `start.py`)
+
+**Uso:** Haz doble clic en `XONISPAM_ADMIN.bat` y acepta los permisos de administrador.
+
 **Notas:**
 - `scrot` y `xdotool` ayudan en Linux para ciertas funciones de automatización
 - En algunas distribuciones con Wayland puede ser necesario cambiar a Xorg o permitir control de entrada
+- El lanzador (`start.py`) instala automáticamente las dependencias faltantes
 
 ## ⚙️ Uso
 
-1. Asegúrate de que la ventana objetivo (chat, editor, etc.) tenga el foco y el cursor en el campo donde quieres escribir
-2. Ejecuta el lanzador:
-
+### Desde AUR (instalado con yay)
 ```bash
+# Simplemente ejecuta
+xonispam
+```
+
+### Desde GitHub (modo desarrollo)
+```bash
+# Ejecutar el lanzador
 python start.py
 ```
 
-3. El lanzador verificará las dependencias y automáticamente ejecutará `xonispam.py`
-4. En el menú principal de XONISPAM, elige una opción:
+### Menú principal
 
 ```
 MENU PRINCIPAL:
@@ -103,53 +145,88 @@ MENU PRINCIPAL:
   [2] SALIR
 ```
 
-5. Tras elegir, el script espera **3 segundos** antes de empezar para que tengas tiempo de colocar el foco en la ventana destino
+**Importante:** Tras elegir una opción, el script espera **3 segundos** para que tengas tiempo de colocar el foco en la ventana destino.
 
-### Accesos directos
+## 🚀 Características del Lanzador
 
-El lanzador crea automáticamente accesos directos para facilitar la ejecución:
+El `start.py` incluye:
 
-- **Windows:** `INICIAR_XONISPAM.bat` (doble clic)
-- **Linux:** `INICIAR_XONISPAM.sh` (ejecutar con `./INICIAR_XONISPAM.sh`)
-- **MacOS:** `INICIAR_XONISPAM.command` (doble clic)
+- ✅ **Verificación automática de Python y pip**
+- ✅ **Instalación automática de dependencias** (pyautogui)
+- ✅ **Soporte `--break-system-packages` para Arch/Fedora**
+- ✅ **Instalación automática de dependencias del sistema** (scrot, xdotool en Linux)
+- ✅ **Búsqueda de `xonispam.py` en múltiples ubicaciones:**
+  - Mismo directorio (desarrollo local)
+  - `/usr/share/xonispam/` (instalación AUR)
+  - `~/.xonispam/` (usuario)
+- ✅ **Accesos directos automáticos** (.bat para Windows, .sh para Linux)
 
 ## ✋ Pausar / Detener
 
 - Para detener el script en ejecución: `Ctrl + C`
-- Si el script está enviando teclas y necesitas recuperar el control, intenta cambiar a otra ventana o presionar la combinación de seguridad del sistema (ej. `Ctrl+Alt+F1` en Linux para cambiar de consola)
+- Si el script está enviando teclas y necesitas recuperar el control, cambia a otra ventana o presiona `Ctrl+Alt+F1` (Linux) para cambiar de consola.
+- **En Windows:** Mueve el mouse a la esquina superior izquierda para activar el FailSafe de pyautogui
 
 ## 🔒 Consideraciones de seguridad y ética
 
 - No uses este script para enviar mensajes no solicitados, acosar o causar daños
 - No lo ejecutes en sistemas de terceros sin permiso
-- Evita usarlo en sistemas donde `pyautogui` pueda interactuar con privilegios elevados o alterar la configuración del sistema
-- Este programa es **SOLO para fines educativos**
+- Evita usarlo en sistemas donde `pyautogui` pueda interactuar con privilegios elevados
+- **Este programa es SOLO para fines educativos**
 
 ## 🐛 Problemas comunes
 
-- **"Las teclas no se envían"**: revisa que la ventana de destino tenga el foco y que el servidor gráfico permita inyección de eventos
-- **"Funcionó solo parcialmente"**: puede haber diferencias entre entornos (Wayland vs Xorg). Prueba en Xorg si es posible
-- **"Permisos"**: en algunos entornos de escritorio hay que habilitar control por aplicaciones
-- **"Error: No se encuentra spam.py"**: asegúrate de que `xonispam.py` está en el mismo directorio que `start.py`
+| Problema | Solución |
+|----------|----------|
+| "Las teclas no se envían" | Verifica que la ventana destino tenga el foco y que el servidor gráfico permita inyección de eventos |
+| "Funcionó solo parcialmente" | Puede haber diferencias entre Wayland y Xorg. Prueba en Xorg |
+| "scrot/xdotool no encontrado" | El lanzador pregunta si instalar estas dependencias automáticamente |
+| "Error: No se encuentra xonispam.py" | Asegúrate de que `xonispam.py` está en el mismo directorio que `start.py` o instaló correctamente desde AUR |
+| "Hook declined" en AUR | El archivo `.SRCINFO` es requerido - el PKGBUILD actualizado ya lo incluye |
+| "Permiso denegado en Windows" | Usa `XONISPAM_ADMIN.bat` para ejecutar como administrador |
 
 ## 📦 Archivos incluidos
 
-- `start.py` — Lanzador universal (verifica dependencias y ejecuta el programa)
-- `xonispam.py` — Programa principal con la funcionalidad de spam
-- `requisitos.txt` — Dependencias Python
-- `README.md` — Este archivo de documentación
+| Archivo | Descripción |
+|---------|-------------|
+| `start.py` | Lanzador universal (verifica dependencias y ejecuta el programa) |
+| `xonispam.py` | Programa principal con la funcionalidad de spam |
+| `requisitos.txt` | Dependencias Python (`pyautogui`) |
+| `PKGBUILD` | Para instalar desde AUR |
+| `XONISPAM_ADMIN.bat` | Lanzador para Windows con permisos de administrador |
+| `README.md` | Este archivo de documentación |
 
 ## 📊 Estadísticas del proyecto
 
 - **Estrellas:** 0
 - **Observadores:** 1
 - **Forks:** 0
-- **Lenguaje principal:** Python 100.0%
+- **Lenguaje principal:** Python 96.0%
+- **Shell:** 4.0%
+
+## 📝 Versiones
+
+### v1.0.0 (2026)
+- Lanzamiento inicial
+- Soporte multiplataforma (Windows, Linux, MacOS)
+- Dos modos de spam: mensaje repetido y archivo de texto
+- Instalación automática de dependencias
+- Accesos directos para cada sistema operativo
+- Publicado en AUR: `yay -S xonispam`
+- Script `.bat` para Windows con permisos de administrador
+
+## 🔗 Enlaces
+
+- **GitHub:** https://github.com/XONIDU/xonispam
+- **AUR:** https://aur.archlinux.org/packages/xonispam
 
 ## ✉️ Contacto y Créditos
 
 - **Proyecto:** XONISPAM
 - **Contacto:** xonidu@gmail.com
 - **Creador:** Darian Alberto Camacho Salas
+- **Organización:** XONIDU
 - **#Somos XONINDU**
+
+---
 
